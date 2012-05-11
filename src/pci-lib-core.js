@@ -119,6 +119,39 @@
                 }
             }
         },
+        // La fonction qui stock le QR Code comme un blob dans le localStorage
+        get_qr_to_blob:function (url) {
+
+            // On définit la requête XHR2
+            // On utilise une réponse de type Arraybuffer puisque blob ne fonctionne pas encore
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.responseType = "arraybuffer";
+
+            // Lorsque la requête s'exécute et que le code HTTP renvoyé est 200
+            xhr.onload = function (e) {
+                if (xhr.status === 200) {
+                    try {
+                        // On définit les FileReader et BlobBuilder (spécifique à Webkit pour le moment)
+                        var fr = new FileReader();
+                        var bb = new WebKitBlobBuilder();
+
+                        // On créé le blob et on lit ses données via un FileReader
+                        // On stocke le résultat dans le localStorage
+                        bb.append(this.response);
+                        fr.readAsDataURL(bb.getBlob('image/png'));
+                        fr.onload = function (e) {
+                            localStorage["qr_code_blob"] = e.target.result;
+                        };
+                    }
+                    catch (e) {
+                        console.log("Erreur lors de la récupération du QR Code : " + e.message);
+                    }
+                }
+            };
+            // Send XHR
+            xhr.send();
+        },
         // La fonction qui récupère les infos relatives au t-shirt du jour
         get_tshirt_winner_infos:function () {
             // On définit l'URL du fichier source
@@ -162,7 +195,6 @@
                         // Si le contenu des balises est vide, on renvoie 0
                         if (encodeURIComponent(messages.innerText) == "%C2%A0") messages.innerText = "0";
                         if (encodeURIComponent(notifications.innerText) == "%C2%A0") notifications.innerText = "0";
-
 
                         var messages_link = messages.href;
                         var notifications_link = notifications.href;
