@@ -1,57 +1,52 @@
-// On place la bibli dans une fonction anonyme
+// On utilise une IIFE pour éviter la nuisance
 (function () {
-    // L'objet contenant les fonctions permettant de récupérer des infos depuis PdN
-    var PdN =
-    {
-        // La fonction qui récupère les infos relatives aux bons plans
-        get_bp:function (local_var_to_set) {
-            var xhr = new XMLHttpRequest();
 
-            // TODO : Changer l'URL en fonction de certains paramètres : mots clefs, type de tri, filtres...
-            // On effectue une requête XHR2 afin de récupérer une page en tant que document DOM
-            xhr.open('GET', 'http://www.prixdunet.com/bon-plan.html?motcle=&type=0&order=nb_lectures&way=desc', true);
-            xhr.responseType = 'document';
+    // On déclare les variables utiles
+    var urls = { bonPlans:"http://www.prixdunet.com/bon-plan.html?motcle=&type=0&order=nb_lectures&way=desc"};
 
-            // Lorsque la requête est lancée, si le statut HTTP est bien 200
-            xhr.onload = function (e) {
-                if (this.status == 200) {
-                    // On créé un tableau qui contiendra les résultats
-                    var result = new Array();
+    // On créé un objet général
+    var PdN = new Object();
 
-                    // On définit les éléments utiles du document
-                    var bp = this.response.getElementById("list_bp").getElementsByClassName("bp_table");
-                    var titre = this.response.getElementById("list_bp").getElementsByClassName("bp_titre");
+    // La fonction qui récupère les informations des bons plans depuis la requête de la page
+    PdN.getBonsPlans = function () {
+        PCi.tools.executeAsyncRequestV2("GET", urls.bonPlans, "document", function (request) {
 
-                    // Pour chaque élément récupéré
-                    for (var i = 0; i < titre.length; i++) {
+            // On créé un tableau qui contiendra les bons plans
+            var result;
+            var bpArray = new Array();
 
-                        // On créé un objet qui contiendra toutes les variables nécessaires
-                        var bon_plan = {
-                            titre:titre[i].getElementsByTagName("a")[0].innerText,
-                            date:titre[i].getElementsByTagName("span")[0].innerText,
-                            categorie:{img:bp[i].getElementsByTagName("img")[0].src, url:bp[i].getElementsByTagName("a")[0].href},
-                            url:titre[i].getElementsByTagName("a")[0].href,
-                            // On rajoute la dernière date de vérification
-                            // Comme cela ne peut être rajouté au tableau global, on le rajouté dans chaque élément
-                            // TODO : améliorer cette solution
-                            last_update_date:new Date().toString()
-                        };
+            try {
+                // On définit les éléments utiles du document
+                var bp = request.response.getElementById("list_bp").getElementsByClassName("bp_table");
+                var titre = request.response.getElementById("list_bp").getElementsByClassName("bp_titre");
 
-                        // On rajoute l'objet au tableau de sortie
-                        result.push(bon_plan);
-                    }
+                // Pour chaque élément récupéré
+                for (var i = 0; i < titre.length; i++) {
 
-                    // TODO : Voir pour remplacer ce fonctionnement par l'utilisation d'une méthode de callback
-                    // On stocke le tableau au sein d'une variable locale
-                    localStorage[local_var_to_set] = JSON.stringify(result);
+                    // On créé un objet qui contiendra toutes les variables nécessaires
+                    var bonPlan = {
+                        titre:titre[i].getElementsByTagName("a")[0].innerText,
+                        date:titre[i].getElementsByTagName("span")[0].innerText,
+                        categorie:{img:bp[i].getElementsByTagName("img")[0].src, url:bp[i].getElementsByTagName("a")[0].href},
+                        url:titre[i].getElementsByTagName("a")[0].href
+                    };
+
+                    // On rajoute l'objet au tableau de sortie
+                    bpArray.push(bonPlan);
+
+                    result = {list:bpArray, lastUpdateDate:new Date().toString(), error:false};
                 }
-            };
-            xhr.send();
-        }
+            }
+                // En cas de souci on renvoie un objet spécifique et on log l'erreur
+            catch (e) {
+                result = {error:true, message:e.message};
+                PCi.tools.logMessage(e.message, true);
+            }
+
+            localStorage["PdNBonsPlansLastCheck"] = JSON.stringify(result);
+        });
     };
 
     // On créé le raccourci vers la bibli
-    if (!window.PdN) {
-        window.PdN = PdN;
-    }
+    if (!window.PdN) window.PdN = PdN;
 })();
