@@ -2,7 +2,7 @@
 (function () {
 
     // On déclare les variables utiles
-    var urls = { bonPlans:"http://www.prixdunet.com/bon-plan.html?motcle=&type=0&order=nb_lectures&way=desc"};
+    var urls = { bonPlans:"http://www.prixdunet.com/bon-plan.html?motcle=&type=0&order=nb_lectures&way=desc" };
 
     // On créé un objet général
     var PdN = new Object();
@@ -43,6 +43,8 @@
                 PCi.tools.logMessage(e.message, true);
             }
 
+            // On enregistre le résultat
+            // TODO : Voir pour remplacer par un "message passing"
             localStorage["PdNBonsPlansLastCheck"] = JSON.stringify(result);
         });
     };

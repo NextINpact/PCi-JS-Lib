@@ -85,7 +85,7 @@
         },
 
         // La fonction qui transforme un champ texte en entier
-        stringToInt: function (value) {
+        stringToInt:function (value) {
             var result = 0;
             if (value) result = parseInt(value);
             return result;
@@ -94,7 +94,7 @@
         // La fonction qui récupère une image via son URL pour la placer dans un string/blob local
         urlToLocalBlob:function (url) {
 
-            PCi.tools.executeAsyncRequestV2("GET",url,"arraybuffer",function(request){
+            PCi.tools.executeAsyncRequestV2("GET", url, "arraybuffer", function (request) {
                 // On place le tout dans un try / catch pour remonter les éventuelles erreurs
                 try {
                     // On définit les FileReader et BlobBuilder (spécifique à Webkit pour le moment)
