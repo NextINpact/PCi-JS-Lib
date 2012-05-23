@@ -18,10 +18,7 @@
 
         // La fonction qui renvoie l'URL d'un QR Code depuis une URL à transformer
         getQRCodeURL:function (url) {
-            var requestURL = urls.qrcode + encodeURI(url);
-            var qrCodeURL = PCi.tools.executeSyncRequest("POST", requestURL, "", false);
-
-            return qrCodeURL;
+            return urls.qrcode + encodeURI(url);
         },
 
         // La fonction qui récupère le nombre de partages sociaux d'une URL
