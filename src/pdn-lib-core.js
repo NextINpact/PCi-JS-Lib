@@ -10,16 +10,18 @@
     var PdN = {};
 
     // La fonction qui récupère les informations des bons plans depuis la requête de la page
-    PdN.getBonsPlans = function () {
-        PCi.tools.executeAsyncRequestV2("GET", urls.bonPlans, "document", function (request) {
+    // Une fois la réponse obtenue, elle exécute le callback
+    PdN.getBonsPlans = function (callback) {
+        // On exécute une requête v2 pour récupérer le contenu de la page sous forme de DOM
+        PCi.tools.executeAsyncRequestV2("GET", urls.bonPlans, "document", function (resultat) {
 
             // On créé un tableau qui contiendra les bons plans
-            var result = "";
+            var result = {};
             var bpArray = [];
 
             // On définit les éléments utiles du document
-            var bp = request.response.getElementById("list_bp").getElementsByClassName("bp_table");
-            var titre = request.response.getElementById("list_bp").getElementsByClassName("bp_titre");
+            var bp = resultat.response.getElementById("list_bp").getElementsByClassName("bp_table");
+            var titre = resultat.response.getElementById("list_bp").getElementsByClassName("bp_titre");
 
             // Pour chaque élément récupéré
             for (var i = 0; i < titre.length; i++) {
@@ -38,9 +40,7 @@
                 result = {list:bpArray, lastUpdateDate:new Date().toString(), error:false};
             }
 
-            // On enregistre le résultat
-            // TODO : Voir pour remplacer par un "message passing"
-            localStorage["PdNBonsPlansLastCheck"] = JSON.stringify(result);
+            callback(result);
         });
     };
 

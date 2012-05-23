@@ -40,17 +40,21 @@
     };
 
     // La fonction qui récupère l'heure depuis un élément Date
-    Date.prototype.toTimeString = function (separateur) {
+    Date.prototype.toTimeString = function (separateur, addSeconds) {
 
         // On rajoute un "0" pour les valeurs inférieures à 10
         var h = (this.getHours() < 10) ? "0" + this.getHours() : this.getHours();
         var m = (this.getMinutes() < 10) ? "0" + this.getMinutes() : this.getMinutes();
+        var s = (this.getSeconds() < 10) ? "0" + this.getSeconds() : this.getSeconds();
 
+        // On définit le tableau qui sera utilisé pour la variable de sortie
         var resultArray = new Array(h, m);
+        if (addSeconds) resultArray.push(s);
+
         return resultArray.join(separateur);
     };
 
-    // La fonction qui transforme une Date en phrase FR
+    // La fonction qui transforme une Date en français
     Date.prototype.toFR = function (returnHour) {
 
         // On met en forme la date retournée
@@ -60,10 +64,7 @@
             this.getFullYear());
 
         // Si l'heure est demandée, on la rajoute
-        if (returnHour) {
-            var heure = this.toTimeString(":");
-            resultArray.push("à", heure);
-        }
+        if (returnHour) resultArray.push("à", this.toTimeString(":"));
 
         // On met en forme le résultat, et on le renvoie
         return resultArray.join(" ");

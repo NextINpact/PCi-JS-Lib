@@ -13,7 +13,7 @@
     };
 
     // On déclare l'objet général
-    var PCi = new Object();
+    var PCi = {};
 
     // La boîte à outils
     PCi.tools = {
@@ -79,7 +79,7 @@
             xhr.send(null);
         },
 
-        // La fonction qui effectue un log
+        // La fonction qui effectue un log en fonction du paramètre PCiEnableLog du localStorage
         logMessage:function (message, error) {
 
             // On n'exécute la commande que si la variable nécessaire est disponible dans le localStorage
@@ -96,9 +96,9 @@
             }
         },
 
-        // La fonction qui transforme un champ texte en entier
+        // La fonction qui récupère un entier depuis une string
         stringToInt:function (value) {
-            // On initialise la variable de résultat
+            // On initialise l'entier qui sera renvoyé
             var result = 0;
 
             // Si la valeur est définie, on effectue le parsing
@@ -107,8 +107,9 @@
             return result;
         },
 
-        // La fonction qui récupère une image via son URL pour la placer dans un string/blob local
-        urlToLocalBlob:function (url) {
+        // La fonction qui récupère une image via son URL, sous forme d'un arraybuffer
+        // Une fois la réponse obtenue, elle exécute le callback
+        urlToLocalBlob:function (url, callback) {
 
             PCi.tools.executeAsyncRequestV2("GET", url, "arraybuffer", function (request) {
 
@@ -121,7 +122,7 @@
                 bb.append(request.response);
                 fr.readAsDataURL(bb.getBlob("image/png"));
                 fr.onload = function (e) {
-                    localStorage["qrCodeBlob"] = e.target.result;
+                    callback(e.target.result);
                 };
 
             })

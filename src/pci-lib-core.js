@@ -12,7 +12,7 @@
     };
 
     // On déclare l'objet général
-    var PCi = new Object();
+    var PCi = {};
 
     // La gestion des actualités
     PCi.actus = {
@@ -20,51 +20,37 @@
         // La fonction qui récupère les actualités
         get:function (redacteur, nb) {
 
-            // On définit la variable de sortie
-            var actus = new Object();
+            // Si les paramètres sont invalides, on lance une exception
+            if (typeof (redacteur) != "string" || typeof (nb) != "number")
+                throw "Impossible de rappatrier les actualités. Un des paramètres indiqué n'était pas valide";
 
-            // On vérifie la validité des paramètes
-            if (typeof (redacteur) == "string" && typeof (nb) == "number") {
+            // On créé les paramètres qui seront passés dans la requête si nécessaire
+            var form = false, parametersArray = new Array();
+            if (redacteur != "" || nb > 0) {
 
-                // On créé les paramètres qui seront passés dans la requête si nécessaire
-                var form;
-                var parametersArray = new Array();
-
-                if (redacteur != "" || nb > 0) {
-                    form = true;
-
-                    // On définit les paramètres à renvoyer
-                    if (redacteur != "") parametersArray.push("redacteur=", encodeURIComponent(redacteur), "&");
-                    if (nb > 0) parametersArray.push("nb_news=", nb);
-                }
-
-                // On effectue la requête permettant de récupérer les actualités
-                actus = JSON.parse(PCi.tools.executeSyncRequest("POST", urls.actus, parametersArray.join(""), form));
-
-                PCi.tools.logMessage("Actualités récupérées");
-
-                // On remplace l'élément de date par un élément utilisable
-                // On garde la valeur renvoyée au sein de PublishDate.old_format
-                // On rajoute les décomptes issus des réseaux sociaux
-                for (var key in actus.List) {
-                    var d = actus.List[key].PublishDate.dateFromDotNet();
-                    var dateFR = d.toFR(false);
-                    actus.List[key].PublishDate = {
-                        "date":dateFR,
-                        "time":d.toTimeString(":"),
-                        old_format:actus.List[key].PublishDate};
-
-                    //actus.List[key].socialCount = PCi.tools.getSocialCount(actus.List[key].AbsoluteUrl);
-
-                }
-
-                PCi.tools.logMessage("Mise en forme de la date et compteurs sociaux : OK");
-
-                // On rajoute la date de check et on précise que tout s'est bien passé
-                actus.lastUpdateDate = new Date().toString();
-
+                // On définit les paramètres à renvoyer
+                if (redacteur != "") parametersArray.push("redacteur=", encodeURIComponent(redacteur), "&");
+                if (nb > 0) parametersArray.push("nb_news=", nb);
+                form = true;
             }
-            else throw "Impossible de rappatrier les actualités. Un des paramètres indiqué n'était pas valide";
+
+            // On effectue la requête permettant de récupérer les actualités
+            var actus = JSON.parse(PCi.tools.executeSyncRequest("POST", urls.actus, parametersArray.join(""), form));
+
+            // On remplace l'élément de date par un élément utilisable
+            // On garde la valeur renvoyée au sein de PublishDate.old_format
+            for (var key in actus.List) {
+                var d = actus.List[key].PublishDate.dateFromDotNet();
+                var dateFR = d.toFR(false);
+
+                actus.List[key].PublishDate = {
+                    "date":dateFR,
+                    "time":d.toTimeString(":"),
+                    old_format:actus.List[key].PublishDate};
+            }
+
+            // On rajoute la date de check et on précise que tout s'est bien passé
+            actus.lastUpdateDate = new Date().toString();
 
             return actus;
         },
@@ -79,7 +65,6 @@
 
                 // On parcourt le tableau de contenus
                 for (var key in contentArray) {
-
                     // Si on trouve l'actu avec son ID et sa date identique, on renvoie false
                     if (contentArray[key].Id == contentToCheck.Id &&
                         contentArray[key].PublishDate.old_format == contentToCheck.PublishDate.old_format) {
@@ -91,13 +76,8 @@
                 return result;
             }
 
-            // On indique que l'on a lancé la vérification des actualités
-            PCi.tools.logMessage("Vérification des actualités en cours", false);
-
             // On récupère le JSON d'actus et on définit les variables utiles
-            var actus = PCi.actus.get("", 0);
-            var lastCheckLocalVarName = "PCiActusLastCheck";
-            var result = new Object();
+            var actus = PCi.actus.get("", 0), lastCheckLocalVarName = "PCiActusLastCheck", result = {};
 
             // Si la variable locale existe, un premier check a déjà été effectué, il peut y avoir du nouveau
             if (localStorage[lastCheckLocalVarName]) {
@@ -110,7 +90,7 @@
                 // On définit le tableau de sortie
                 var newActusArray = new Array();
 
-                // Si le premier ID a changé, ou que le nombre total de news à changé, il y a du nouveau
+                // Si le premier ID ou que le nombre total de news ont changé, il y a du nouveau
                 if (actus.List[0].Id != lastCheckTemp.List[0].Id || actus.NbNews != lastCheckTemp.NbNews) {
                     // Pour chaque actu de la liste
                     for (var key in actus.List) {
@@ -119,12 +99,9 @@
                     }
                 }
 
-                // On place la liste dans la variable de sortie
+                // On place le tableau de nouvelles actus dans la variable de sortie
                 result = { list:newActusArray };
 
-                // Si de nouvelles actus ont été trouvées on affiche un message dans le log
-                if (newActusArray.length > 0)
-                    PCi.tools.logMessage(newActusArray.length + " nouveau(x) contenu(s) détecté(s)", false);
             }
             // Si l'on est dans le cas d'un premier check, on le précise dans le log
             else PCi.tools.logMessage("Première vérification des actualités", false);
@@ -141,27 +118,33 @@
     }
     ;
 
-// La gestion du forum
+    // La gestion du forum
     PCi.forum = {
 
-        get:function (localVarToSet) {
-
+        // La fonction qui permet de récupérer les données du forum
+        // Une fois la réponse obtenue, elle exécute le callback
+        get:function(callback) {
 
             // On exécute la requête sur la page du forum
-            PCi.tools.executeAsyncRequestV2("GET", urls.forum, "document", function (request) {
-
-                PCi.tools.logMessage("Contenu du forum récupéré", false);
+            PCi.tools.executeAsyncRequestV2("GET", urls.forum, "document", function (requestResult) {
 
                 // On récupère les données de l'utilisateur et du gagnant du t-shirt
-                var user = request.response.getElementById("user_link");
-                var gagnant = request.response.getElementById("index_stats").getElementsByClassName("bbc_member")[0];
+                var user = requestResult.response.getElementById("user_link");
+                var gagnant = requestResult.response.getElementById("index_stats").getElementsByClassName("bbc_member")[0];
                 var gagnantLink = gagnant.href;
+
+                // On intègre les éléments de base dans la variable de résultat
+                var resultat = {
+                    gagnant : {name:gagnant.innerText, url:gagnantLink},
+                    last_update_date : new Date().toString()
+                };
 
                 // Si l'utilisateur est connecté, on obtiendra une valeur non nulle
                 if (user != null) {
+
                     // On récupère les données concernant les messages et les notifications
-                    var messages = request.response.getElementById("inbox_link");
-                    var notifications = request.response.getElementById("notify_link");
+                    var messages = requestResult.response.getElementById("inbox_link");
+                    var notifications = requestResult.response.getElementById("notify_link");
 
                     // Si le contenu des balises est vide, on renvoie 0
                     if (encodeURIComponent(messages.innerText) == "%C2%A0") messages.innerText = "0";
@@ -171,27 +154,18 @@
                     var notificationsLink = notifications.href;
 
                     // On enregistre l'objet final dans le localStorage
-                    localStorage[localVarToSet] = JSON.stringify({
-                        gagnant:{name:gagnant.innerText, url:gagnantLink},
+                    resultat = {
                         messages:{count:parseInt(messages.innerText), url:messagesLink},
                         notifications:{count:parseInt(notifications.innerText), url:notificationsLink},
                         user:{name:user.innerText, url:user.href},
-                        is_connected:true,
-                        last_update_date:new Date().toString()
-                    });
+                        isLoggedIn:true
+                    };
 
-                    PCi.tools.logMessage("Informations du forum en cache - Utilisateur connecté", false);
                 }
                 // Si l'utilisateur n'est pas connecté, on enregistre un objet spécifique
-                else {
-                    localStorage[localVarToSet] = JSON.stringify({
-                        gagnant:{name:gagnant.innerText, url:gagnantLink},
-                        is_connected:false,
-                        last_update_date:new Date().toString()
-                    });
+                else resultat.isLoggedIn = false;
 
-                    PCi.tools.logMessage("Informations du forum en cache - Utilisateur déconnecté", false);
-                }
+                callback(resultat);
             })
 
         }
@@ -200,17 +174,12 @@
 // La gestion des utilisateurs
     PCi.user = {
 
-        get:function () {
-
-            // On définit la variable de sortie
-            var result = new Object();
+        getInfos:function () {
 
             // On récupère les informations de l'utilisateur
-            result = JSON.parse(PCi.tools.executeSyncRequest("POST", urls.user, "", false));
-
             // On rajoute la date de check et on précise que tout s'est bien passé
+            var result = JSON.parse(PCi.tools.executeSyncRequest("POST", urls.user, "", false));
             result.lastUpdateDate = new Date().toString();
-            result.error = false;
 
             return result;
         }
@@ -218,4 +187,4 @@
 
 // On créé le raccourci vers la bibli
     if (!window.PCi) window.PCi = PCi;
-}) ();
+})();
