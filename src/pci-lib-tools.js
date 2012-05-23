@@ -3,7 +3,7 @@
 
     // On déclare les variables utiles
     var urls = {
-        qrcode:"http://api.qrserver.com/v1/create-qr-code/?size=100x100&data=",
+        qrcode:"http://api.qrserver.com/v1/create-qr-code",
         social:{
             facebook:"https://graph.facebook.com/?ids=",
             twitter:"http://urls.api.twitter.com/1/urls/count.json?url="
@@ -17,8 +17,12 @@
     PCi.tools = {
 
         // La fonction qui renvoie l'URL d'un QR Code depuis une URL à transformer
-        getQRCodeURL:function (url) {
-            return urls.qrcode + encodeURI(url);
+        getQRCodeURL:function (url, size) {
+            // On compose l'URL via un tableau
+            var finalURLArray = [urls.qrcode, "/?", "size=", size, "x", size, "&", "data=", encodeURI(url)];
+
+            // On renvoie l'URL assemblée
+            return finalURLArray.join("");
         },
 
         // La fonction qui récupère le nombre de partages sociaux d'une URL
