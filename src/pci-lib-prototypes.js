@@ -1,6 +1,8 @@
 // On utilise une IIFE pour éviter la nuisance
 (function () {
 
+    'use strict'; // Strict mode
+
     // On définit des tableaux contenant la liste des jours et des mois
     var days = new Array();
     var months = new Array();
@@ -86,15 +88,16 @@
         //
         ////////////////////////////
 
-        // On initialise la variable de sortie / utiles
+        // On initialise les variables de sortie / utiles
         var resultArray = new Array();
+        var dateFR, index, jour, minutes;
 
         if (delai < 60 * 1000)
             resultArray.push("Il y a quelques secondes");
 
         else if (delai < 60 * 60 * 1000) {
-            var minutes = Math.round(delai / 1000.00 / 60.00);
-            resultArray.push("Il y a", value);
+            minutes = Math.round(delai / 1000.00 / 60.00);
+            resultArray.push("Il y a", minutes);
 
             // On gère le cas du pluriel
             resultArray.push((minutes > 1) ? "minutes" : "minute");
@@ -104,17 +107,17 @@
 
         else if (delai < 24 * 60 * 60 * 1000) {
             // On transforme la date en Français, et on récupère l'index de la lettre "à"
-            var dateFR = this.toFR(true);
-            var index = dateFR.indexOf("à");
+            dateFR = this.toFR(true);
+            index = dateFR.indexOf("à");
 
             // On remplace le début de la date récupéré par "Hier,"
             resultArray.push("Hier,", dateFR.substr(index));
         }
         else if (delai < 7 * 24 * 60 * 60 * 1000) {
 
-            var dateFR = this.toFR(true);                      // On récupère la date en français
-            var index = dateFR.indexOf("à");                   // On récupère l'index du "à"
-            var jour = new Array(dateFR.split(" ")[1], ",");    // On découpe la date et on met en forme : "jour,"
+            dateFR = this.toFR(true);                      // On récupère la date en français
+            index = dateFR.indexOf("à");                   // On récupère l'index du "à"
+            jour = new Array(dateFR.split(" ")[1], ",");    // On découpe la date et on met en forme : "jour,"
 
             resultArray.push(jour.join(""), dateFR.substr(index));
         }

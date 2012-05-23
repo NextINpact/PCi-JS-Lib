@@ -1,6 +1,8 @@
 // On utilise une IIFE pour éviter la nuisance
 (function () {
 
+    'use strict'; // Strict mode
+
     // On déclare les variables utiles
     var urls = {
         qrcode:"http://api.qrserver.com/v1/create-qr-code",
@@ -49,7 +51,7 @@
             var formHeader = "Content-Type', 'application/x-www-form-urlencoded";
 
             // Si l'on demande un traitement de type "formulaire" on déclare le header adéquat
-            if (form) xmlhttp.setRequestHeader(formHeader);
+            if (form) xhr.setRequestHeader(formHeader);
 
             // On envoie la requête et on renvoie le résultat, fonctionnement synchrone
             xhr.open(type, url, false);
@@ -96,8 +98,12 @@
 
         // La fonction qui transforme un champ texte en entier
         stringToInt:function (value) {
+            // On initialise la variable de résultat
             var result = 0;
+
+            // Si la valeur est définie, on effectue le parsing
             if (value) result = parseInt(value);
+
             return result;
         },
 
@@ -105,23 +111,19 @@
         urlToLocalBlob:function (url) {
 
             PCi.tools.executeAsyncRequestV2("GET", url, "arraybuffer", function (request) {
-                // On place le tout dans un try / catch pour remonter les éventuelles erreurs
-                try {
-                    // On définit les FileReader et BlobBuilder (spécifique à Webkit pour le moment)
-                    var fr = new FileReader();
-                    var bb = new WebKitBlobBuilder();
 
-                    // On créé le blob et on lit ses données via un FileReader
-                    // On stocke le résultat dans le localStorage
-                    bb.append(request.response);
-                    fr.readAsDataURL(bb.getBlob("image/png"));
-                    fr.onload = function (e) {
-                        localStorage["qrCodeBlob"] = e.target.result;
-                    };
-                }
-                catch (e) {
-                    PCi.tools.logMessage(e.message, true);
-                }
+                // On définit les FileReader et BlobBuilder (spécifique à Webkit pour le moment)
+                var fr = new FileReader();
+                var bb = new WebKitBlobBuilder();
+
+                // On créé le blob et on lit ses données via un FileReader
+                // On stocke le résultat dans le localStorage
+                bb.append(request.response);
+                fr.readAsDataURL(bb.getBlob("image/png"));
+                fr.onload = function (e) {
+                    localStorage["qrCodeBlob"] = e.target.result;
+                };
+
             })
         }
     };

@@ -1,6 +1,8 @@
 // On utilise une IIFE pour éviter la nuisance
 (function () {
 
+    'use strict'; // Strict mode
+
     // On déclare les variables utiles
     var urls = {
         actus:"http://www.pcinpact.com/ReadApi/ListActu",
