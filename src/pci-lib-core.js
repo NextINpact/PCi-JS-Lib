@@ -6,6 +6,7 @@
     // On déclare les variables utiles
     var urls = {
         actus:"http://www.pcinpact.com/ReadApi/ListActu",
+        emploi:"http://www.pcinpact.com/rss/emplois.xml",
         forum:"http://forum.pcinpact.com/",
         tshirt:"http://www.pcinpact.com/ReadApi/Teeshirt",
         user:"http://www.pcinpact.com/ReadApi/UserInfo"
@@ -118,8 +119,34 @@
     };
 
     // La gestion de la section emploi
-    PCi.emploi = {};
-    
+    PCi.emploi = {
+
+        // La fonction qui permet de récupérer la liste des offres d'emploi
+        get:function (callback) {
+
+            // On exécute la requête sur le fichier XML
+            PCi.tools.executeAsyncRequestV2("GET", urls.emploi, "document", function (requestResult) {
+
+                // On récupère les champs "item" et on déclare le tableau de sortie
+                var offres = requestResult.response.getElementsByTagName("item"), sortie = [];
+
+                // On transforme chacun des éléments en un objet
+                for (var i = 0; i < offres.length; i++) {
+                    var o = {};
+                    o.title = offres[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+                    o.url = offres[i].getElementsByTagName("link")[0].childNodes[0].nodeValue;
+                    o.description = offres[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
+
+                    // On rajoute l'objet au tableau de sortie
+                    sortie.push(o);
+                }
+
+                // On passe la main au callback
+                callback(sortie);
+            });
+        }
+    };
+
     // La gestion du forum
     PCi.forum = {
 
@@ -138,11 +165,10 @@
                 var resultat = {};
                 resultat.last_update_date = new Date().toString();
 
-				if (gagnant)
-				{
-					var gagnantLink = gagnant.href;
-                	resultat.gagnant = {name:gagnant.innerText, url:gagnantLink};
-				}
+                if (gagnant) {
+                    var gagnantLink = gagnant.href;
+                    resultat.gagnant = {name:gagnant.innerText, url:gagnantLink};
+                }
 
                 // Si l'utilisateur est connecté, on obtiendra une valeur non nulle
                 if (user != null) {
