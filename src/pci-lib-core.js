@@ -100,7 +100,7 @@
                 }
 
                 // On place le tableau de nouvelles actus dans la variable de sortie
-                result = { list:newActusArray };
+                result = { List:newActusArray };
 
             }
             // Si l'on est dans le cas d'un premier check, on le précise dans le log
@@ -115,15 +115,17 @@
             // On renvoie le tableau contenant les nouvelles actualités
             return result;
         }
-    }
-    ;
+    };
 
+    // La gestion de la section emploi
+    PCi.emploi = {};
+    
     // La gestion du forum
     PCi.forum = {
 
         // La fonction qui permet de récupérer les données du forum
         // Une fois la réponse obtenue, elle exécute le callback
-        get:function(callback) {
+        get:function (callback) {
 
             // On exécute la requête sur la page du forum
             PCi.tools.executeAsyncRequestV2("GET", urls.forum, "document", function (requestResult) {
@@ -131,13 +133,16 @@
                 // On récupère les données de l'utilisateur et du gagnant du t-shirt
                 var user = requestResult.response.getElementById("user_link");
                 var gagnant = requestResult.response.getElementById("index_stats").getElementsByClassName("bbc_member")[0];
-                var gagnantLink = gagnant.href;
 
                 // On intègre les éléments de base dans la variable de résultat
-                var resultat = {
-                    gagnant : {name:gagnant.innerText, url:gagnantLink},
-                    last_update_date : new Date().toString()
-                };
+                var resultat = {};
+                resultat.last_update_date = new Date().toString();
+
+				if (gagnant)
+				{
+					var gagnantLink = gagnant.href;
+                	resultat.gagnant = {name:gagnant.innerText, url:gagnantLink};
+				}
 
                 // Si l'utilisateur est connecté, on obtiendra une valeur non nulle
                 if (user != null) {
@@ -153,13 +158,10 @@
                     var messagesLink = messages.href;
                     var notificationsLink = notifications.href;
 
-                    // On enregistre l'objet final dans le localStorage
-                    resultat = {
-                        messages:{count:parseInt(messages.innerText), url:messagesLink},
-                        notifications:{count:parseInt(notifications.innerText), url:notificationsLink},
-                        user:{name:user.innerText, url:user.href},
-                        isLoggedIn:true
-                    };
+                    resultat.messages = {count:parseInt(messages.innerText), url:messagesLink};
+                    resultat.notifications = {count:parseInt(notifications.innerText), url:notificationsLink};
+                    resultat.user = {name:user.innerText, url:user.href};
+                    resultat.isLoggedIn = true;
 
                 }
                 // Si l'utilisateur n'est pas connecté, on enregistre un objet spécifique
