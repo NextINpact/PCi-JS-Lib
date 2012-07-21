@@ -127,19 +127,24 @@
             // On exécute la requête sur le fichier XML
             PCi.tools.executeAsyncRequestV2("GET", urls.emploi, "document", function (requestResult) {
 
-                // On récupère les champs "item" et on déclare le tableau de sortie
-                var offres = requestResult.response.getElementsByTagName("item"), sortie = [];
+                // On récupère les champs "item" et on déclare le tableau et l'objet de sortie
+                var offresXML = requestResult.response.getElementsByTagName("item"), offresArray = [], sortie = {};
 
                 // On transforme chacun des éléments en un objet
-                for (var i = 0; i < offres.length; i++) {
+                for (var i = 0; i < offresXML.length; i++) {
                     var o = {};
-                    o.title = offres[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
-                    o.url = offres[i].getElementsByTagName("link")[0].childNodes[0].nodeValue;
-                    o.description = offres[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
+                    o.title = offresXML[i].getElementsByTagName("title")[0].childNodes[0].nodeValue;
+                    o.url = offresXML[i].getElementsByTagName("link")[0].childNodes[0].nodeValue;
+                    o.description = offresXML[i].getElementsByTagName("description")[0].childNodes[0].nodeValue;
 
                     // On rajoute l'objet au tableau de sortie
-                    sortie.push(o);
+                    offresArray.push(o);
                 }
+
+                // On remplie l'objet de sortie
+                sortie.list = offresArray;
+                sortie.lastUpdateDate = new Date().toString();
+                sortie.error = false;
 
                 // On passe la main au callback
                 callback(sortie);
