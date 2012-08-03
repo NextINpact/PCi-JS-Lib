@@ -141,7 +141,7 @@
                     offresArray.push(o);
                 }
 
-                // On remplie l'objet de sortie
+                // On remplit l'objet de sortie
                 sortie.list = offresArray;
                 sortie.lastUpdateDate = new Date().toString();
                 sortie.error = false;
