@@ -76,6 +76,7 @@
                     callback(this);
                 }
             };
+
             xhr.send(null);
         },
 
@@ -107,20 +108,16 @@
             return result;
         },
 
-        // La fonction qui récupère une image via son URL, sous forme d'un arraybuffer
+        // La fonction qui récupère une image via son URL, sous forme d'un blob
         // Une fois la réponse obtenue, elle exécute le callback
         urlToLocalBlob:function (url, callback) {
 
-            PCi.tools.executeAsyncRequestV2("GET", url, "arraybuffer", function (request) {
-
-                // On définit les FileReader et BlobBuilder (spécifique à Webkit pour le moment)
+            PCi.tools.executeAsyncRequestV2("GET", url, "blob", function (request) {
+                
+                // On créé le blob puis on en récupère l'URL que l'on renvoie au callback
+                var blob = new Blob([request.response], {type: "image/png"});
                 var fr = new FileReader();
-                var bb = new WebKitBlobBuilder();
-
-                // On créé le blob et on lit ses données via un FileReader
-                // On stocke le résultat dans le localStorage
-                bb.append(request.response);
-                fr.readAsDataURL(bb.getBlob("image/png"));
+                fr.readAsDataURL(blob);
                 fr.onload = function (e) {
                     callback(e.target.result);
                 };
